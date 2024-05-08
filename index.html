@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sololearn Particles</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            position: absolute;
+            background: #000;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="c"></canvas>
+    <script>
+        var c = document.getElementById('c');
+        var a = c.getContext('2d');
+
+        function resizeCanvas() {
+            c.width = window.innerWidth;
+            c.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        var textColors = [
+            "#8252de",  
+            "#f20057",  
+            "#149ef2",  
+            "#ffa30f"   
+        ];
+
+        var selectedTextColor = textColors[Math.floor(Math.random() * textColors.length)];
+        a.font = "bold 50pt Arial";
+
+        // Create gradient for text color using the same four shades as soloparticles
+        var gradient = a.createLinearGradient(0, 0, c.width, 0);
+        gradient.addColorStop(0, '#8252de');
+        gradient.addColorStop(0.3, '#f20057');
+        gradient.addColorStop(0.7, '#149ef2');
+        gradient.addColorStop(1, '#ffa30f');
+
+        a.fillStyle = gradient;
+        a.fillText("Sololearn", 35, 300);
+
+        var px = [];
+        var imgData = a.getImageData(0, 0, c.width, c.height);
+        for (x = 0; x < imgData.width; x++) {
+            for (y = 0; y < imgData.height; y++) {
+                if (getPixel(imgData, x, y)[3] > 0) {
+                    px.push([x, y]);
+                }
+            }
+        }
+        setInterval(draw, 20);
+        var max = 500; // Increased max length of soloparticles
+        var soloparticleWidth = 2; // Thin soloparticles
+
+        var pp = [];
+
+        function Soloparticle() {
+            this.init = function (x, y, width) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.angle = Math.random() * 2 * Math.PI - Math.PI;
+                this.v = 0;
+                this.length = 0;
+            };
+            this.grow = function (distance, curl, step) {
+                if (this.length < max) {
+                    this.x += Math.cos(this.angle) * distance;
+                    this.y += Math.sin(this.angle) * distance;
+                    this.v += Math.random() * step - step / 2;
+                    this.v *= 0.98 + curl * 0.1; // Reduced speed
+                    this.angle += this.v;
+
+                    // Floating effect
+                    this.x += Math.cos(this.angle) * 0.5;
+                    this.y += Math.sin(this.angle) * 0.5;
+
+                    if (this._x != undefined) {
+                        var aa = this.length / max;
+
+                        var colors = [
+                            "#8252de", 
+                            "#f20057",  
+                            "#149ef2",  
+                            "#ffa30f"   
+                        ];
+
+                        var colorIndex = Math.floor(aa * colors.length);
+                        var color = colors[colorIndex];
+
+                        a.beginPath();
+                        a.strokeStyle = color;
+                        a.lineWidth = soloparticleWidth;
+                        a.moveTo(this._x, this._y);
+                        a.lineTo(this.x, this.y);
+                        a.closePath();
+                        a.stroke();
+                    }
+                    this._x = this.x;
+                    this._y = this.y;
+                    this.length++;
+                }
+            };
+        };
+
+        function draw() {
+            // Clear canvas
+            a.clearRect(0, 0, c.width, c.height);
+
+            // Re-draw text
+            a.fillStyle = gradient;
+            a.fillText("Sololearn", 50, 300);
+
+            // add new soloparticles
+            for (var p in px) {
+                if (Math.random() > 0.999) {
+                    var t = new Soloparticle();
+                    t.init(px[p][0], px[p][1], soloparticleWidth);
+                    pp.push(t);
+                }
+            }
+
+            // grow actual soloparticles
+            if (pp.length > 0) {
+                for (var t in pp) {
+                    pp[t].grow(0.6, 0.6, 0.005); // Reduced growth speed and curl
+                }
+            }
+        }
+
+        function getPixel(imgData, x, y) {
+            var offset = (x + y * imgData.width) * 4;
+            var r = imgData.data[offset + 0];
+            var g = imgData.data[offset + 1];
+            var b = imgData.data[offset + 2];
+            var a = imgData.data[offset + 3];
+
+            return [r, g, b, a];
+        }
+        
+        // Create audio element
+// Create audio element
+const audioPlayer = document.createElement('audio');
+audioPlayer.src = "https://dl.dropbox.com/scl/fi/wfgppqwte76qawa0hme5c/Sandra-N-Liar.mp3?rlkey=18b7myn20l0om28hyuue45s8k&dl=1";
+audioPlayer.preload = "auto";
+
+// Create play/pause button
+const playPauseButton = document.createElement('button');
+playPauseButton.textContent = 'Play';
+playPauseButton.style.position = 'fixed';
+playPauseButton.style.top = '20px';
+playPauseButton.style.right = '20px';
+playPauseButton.style.padding = '10px 20px';
+playPauseButton.style.fontSize = '16px';
+
+// Function to handle replaying the audio when it ends
+function replayAudio() {
+  audioPlayer.currentTime = 0;
+  audioPlayer.play();
+  playPauseButton.textContent = 'Pause';
+}
+
+// Add click event to play/pause button
+playPauseButton.addEventListener('click', function() {
+  if (audioPlayer.paused) {
+    audioPlayer.play();
+    playPauseButton.textContent = 'Pause';
+  } else {
+    audioPlayer.pause();
+    playPauseButton.textContent = 'Play';
+  }
+});
+
+// Listen to the 'ended' event of the audio element
+audioPlayer.addEventListener('ended', replayAudio);
+
+// Append audio element and play/pause button to document body
+document.body.appendChild(audioPlayer);
+document.body.appendChild(playPauseButton);
+
+    </script>
+</body>
+  </html>
+  
